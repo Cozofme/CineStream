@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinematic Stream</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+    }
+    
+    .glass {
+      background: rgba(30, 30, 35, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    
+    .glass-light {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .card-hover {
+      transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), 
+                  box-shadow 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+    
+    .slide-up {
+      animation: slideUp 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0.04) 0%,
+        rgba(255,255,255,0.08) 50%,
+        rgba(255,255,255,0.04) 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 2s ease-in-out infinite;
+    }
+    
+    .carousel-container {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .carousel-container::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .nav-link {
+      position: relative;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      width: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.8);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after {
+      width: 100%;
+    }
+    
+    .search-input-enter {
+      animation: slideDownFade 0.3s ease forwards;
+    }
+    
+    @keyframes slideDownFade {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+    }
+    
+    .btn-glass {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-glass:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+    
+    .btn-primary {
+      background: rgba(255, 255, 255, 0.95);
+      color: #0f0f14;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      background: rgba(255, 255, 255, 1);
+      transform: scale(1.02);
+    }
+    
+    .creator-card {
+      transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    
+    .creator-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(100, 150, 255, 0.15);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-[#0f0f14] text-white overflow-x-hidden">
+  <div id="app" class="min-h-full w-full"><!-- Navigation -->
+   <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 glass">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+     <div class="flex items-center justify-between"><!-- Logo -->
+      <div class="flex items-center gap-2 sm:gap-3">
+       <svg class="w-6 h-6 sm:w-8 sm:h-8" viewbox="0 0 32 32" fill="none"><rect x="2" y="6" width="28" height="20" rx="3" stroke="currentColor" stroke-width="1.5" fill="none" /> <polygon points="13,11 13,21 22,16" fill="currentColor" opacity="0.9" />
+       </svg><span class="text-lg sm:text-xl font-semibold tracking-tight">CineStream</span>
+      </div><!-- Nav Links -->
+      <div class="hidden lg:flex items-center gap-6 xl:gap-8"><a href="#" class="nav-link text-sm font-medium text-white/90 hover:text-white active" data-nav="home">Home</a> <a href="#" class="nav-link text-sm font-medium text-white/60 hover:text-white" data-nav="originals">Originals</a> <a href="#" class="nav-link text-sm font-medium text-white/60 hover:text-white" data-nav="movies">Movies</a> <a href="#" class="nav-link text-sm font-medium text-white/60 hover:text-white" data-nav="documentaries">Documentaries</a> <a href="#" class="nav-link text-sm font-medium text-white/60 hover:text-white" data-nav="shorts">Short Films</a>
+      </div><!-- Right Side -->
+      <div class="flex items-center gap-2 sm:gap-4"><!-- Genre Dropdown -->
+       <div class="relative"><button id="genre-btn" class="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-full glass-light text-xs sm:text-sm font-medium"> <span id="selected-genre" class="hidden sm:inline">All Genres</span> <span class="sm:hidden">Genres</span>
+         <svg class="w-3 h-3 sm:w-4 sm:h-4 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
+         </svg></button>
+        <div id="genre-dropdown" class="absolute top-full right-0 mt-2 w-40 sm:w-48 glass rounded-xl py-2 opacity-0 invisible transition-all duration-300 transform translate-y-2 max-h-[70vh] overflow-y-auto"><button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="all">All Genres</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="bollywood">Bollywood</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="hollywood">Hollywood</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="southindian">South Indian</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="action">Action</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="comedy">Comedy</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="drama">Drama</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="documentary">Documentary</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="thriller">Thriller</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="romance">Romance</button> <button class="genre-option w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-white/10 transition-colors" data-genre="tmkoc">TMKOC</button>
+        </div>
+       </div><!-- Search --> <button id="search-toggle" class="p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition-colors">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg></button> <!-- Watch Later --> <button id="watchlater-btn" class="p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition-colors relative">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg><span id="watchlater-count" class="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full text-[10px] flex items-center justify-center font-medium hidden">0</span> </button>
+      </div>
+     </div>
+    </div><!-- Search Bar Below Nav -->
+    <div id="search-bar" class="hidden border-t border-white/10 px-4 sm:px-6 py-3">
+     <div class="max-w-7xl mx-auto">
+      <div class="relative"><input type="text" id="search-input" class="w-full px-4 py-2 bg-white/10 rounded-lg text-sm placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/20 search-input-enter" placeholder="Search movies, shows, documentaries..."> <button id="search-close-btn" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+        </svg></button>
+      </div>
+     </div>
+    </div>
+   </nav><!-- Welcome Message Section -->
+   <section id="welcome-section" class="relative pt-20 sm:pt-24 pb-12 sm:pb-16 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto">
+     <div class="text-center fade-in">
+      <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 mb-4 sm:mb-6">
+       <svg class="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg>
+      </div>
+      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4 px-4 slide-up" style="animation-delay: 0.1s;">Welcome to CineStream</h1>
+      <p class="text-base sm:text-lg md:text-xl text-white/60 font-light max-w-3xl mx-auto px-4 slide-up" style="animation-delay: 0.2s;">Discover a world of entertainment at your fingertips. Stream the latest movies, documentaries, and exclusive content curated just for you.</p>
+      <div class="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-white/40 text-xs sm:text-sm px-4 slide-up" style="animation-delay: 0.3s;">
+       <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M9.5 16.5l-3-3 1.41-1.41L9.5 13.67l6.59-6.59L17.5 8.5z" />
+        </svg><span>Unlimited Access</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M9.5 16.5l-3-3 1.41-1.41L9.5 13.67l6.59-6.59L17.5 8.5z" />
+        </svg><span>HD Quality</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M9.5 16.5l-3-3 1.41-1.41L9.5 13.67l6.59-6.59L17.5 8.5z" />
+        </svg><span>All Devices</span>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section><!-- Content Rows -->
+   <main id="content" class="relative z-10 pb-16 sm:pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12"><!-- New Trailers Row -->
+     <section class="content-row" data-category="trailers">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">🎬 Latest Trailers</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="trailers-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Trending Row -->
+     <section class="content-row" data-category="trending">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Trending Now</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="trending-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Action Row -->
+     <section class="content-row" data-category="action">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Action &amp; Adventure</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="action-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Drama Row -->
+     <section class="content-row" data-category="drama">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Drama</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="drama-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Comedy Row -->
+     <section class="content-row" data-category="comedy">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Comedy</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="comedy-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Documentary Row -->
+     <section class="content-row" data-category="documentary">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Documentaries</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="documentary-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Thriller Row -->
+     <section class="content-row" data-category="thriller">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Thriller &amp; Suspense</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="thriller-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Romance Row -->
+     <section class="content-row" data-category="romance">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Romance</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="romance-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Bollywood Row -->
+     <section class="content-row" data-category="bollywood">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Bollywood Movies</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="bollywood-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- South Indian Movies Row -->
+     <section class="content-row" data-category="southindian">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">South Indian Movies</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="southindian-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- Hollywood Row -->
+     <section class="content-row" data-category="hollywood">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Hollywood Movies</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="hollywood-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section><!-- TMKOC Row -->
+     <section class="content-row" data-category="tmkoc">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-semibold tracking-tight">Taarak Mehta Ka Ooltah Chashmah</h2>
+      </div>
+      <div class="relative group"><button class="carousel-arrow carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+        </svg></button>
+       <div class="carousel-container flex gap-4 overflow-x-auto pb-4" id="tmkoc-carousel">
+       </div><button class="carousel-arrow carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+        </svg></button>
+      </div>
+     </section>
+    </div>
+   </main><!-- About Creators Section -->
+   <section id="creators-section" class="py-16 sm:py-20 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto">
+     <h2 class="text-2xl sm:text-3xl font-bold text-center mb-12 sm:mb-16 tracking-tight">Our Creators</h2>
+     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8"><!-- Creator 1 -->
+      <div class="flex flex-col items-center text-center">
+       <div class="creator-card-interactive w-32 h-32 sm:w-40 sm:h-40 cursor-pointer transition-all duration-500 transform mb-6 sm:mb-8" style="perspective: 1000px;" data-creator="1">
+        <div class="creator-circle w-full h-full rounded-full bg-gradient-to-br from-blue-400/30 to-purple-500/30 flex items-center justify-center shadow-xl overflow-hidden transition-all duration-500 relative group">
+         <img 
+  src="images/Anugya.jpg"
+  alt="Anugya Kumari"
+  class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-110"
+/>
+         <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+        <div class="creator-square absolute inset-0 w-full h-full rounded-2xl glass-light p-6 sm:p-8 flex flex-col items-center justify-center opacity-0 invisible transition-all duration-500 transform scale-75" style="z-index: -1;">
+         <svg class="w-12 h-12 sm:w-16 sm:h-16 text-white/60 mb-3 sm:mb-4" fill="currentColor" viewbox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+         </svg>
+         <h3 class="creator-name text-lg sm:text-xl font-semibold tracking-tight mb-1">Anugya Kumari</h3>
+         <p class="creator-course text-white/50 font-light text-sm mb-1">BSc IT</p>
+         <p class="creator-course text-white/50 font-light text-sm mb-1">22BS62100331</p>
+         <p class="creator-session text-white/40 text-xs font-light">2022 – 2025</p>
+        </div>
+       </div>
+      </div><!-- Creator 2 -->
+      <div class="flex flex-col items-center text-center">
+       <div class="creator-card-interactive w-32 h-32 sm:w-40 sm:h-40 cursor-pointer transition-all duration-500 transform mb-6 sm:mb-8" style="perspective: 1000px;" data-creator="2">
+        <div class="creator-circle w-full h-full rounded-full bg-gradient-to-br from-emerald-400/30 to-cyan-500/30 flex items-center justify-center shadow-xl overflow-hidden transition-all duration-500 relative group">
+         <img 
+  src="images/Awanti.jpg"
+  alt="Awanti Kumari"
+  class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-110"
+/>
+         <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+        <div class="creator-square absolute inset-0 w-full h-full rounded-2xl glass-light p-6 sm:p-8 flex flex-col items-center justify-center opacity-0 invisible transition-all duration-500 transform scale-75" style="z-index: -1;">
+         <svg class="w-12 h-12 sm:w-16 sm:h-16 text-white/60 mb-3 sm:mb-4" fill="currentColor" viewbox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+         </svg>
+         <h3 class="creator-name text-lg sm:text-xl font-semibold tracking-tight mb-1">Awanti kachhap</h3>
+         <p class="creator-course text-white/50 font-light text-sm mb-1">BSc IT</p>
+         <p class="creator-course text-white/50 font-light text-sm mb-1">22BS62100336</p>
+         <p class="creator-session text-white/40 text-xs font-light">2022 – 2025</p>
+        </div>
+       </div>
+      </div><!-- Creator 3 -->
+      <div class="flex flex-col items-center text-center">
+       <div class="creator-card-interactive w-32 h-32 sm:w-40 sm:h-40 cursor-pointer transition-all duration-500 transform mb-6 sm:mb-8" style="perspective: 1000px;" data-creator="3">
+        <div class="creator-circle w-full h-full rounded-full bg-gradient-to-br from-pink-400/30 to-rose-500/30 flex items-center justify-center shadow-xl overflow-hidden transition-all duration-500 relative group">
+         <img 
+  src="images/Vaishnavi.jpg"
+  alt="Vaishnavi Sai"
+  class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-110"
+/>
+         <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+        <div class="creator-square absolute inset-0 w-full h-full rounded-2xl glass-light p-6 sm:p-8 flex flex-col items-center justify-center opacity-0 invisible transition-all duration-500 transform scale-75" style="z-index: -1;">
+         <svg class="w-12 h-12 sm:w-16 sm:h-16 text-white/60 mb-3 sm:mb-4" fill="currentColor" viewbox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+         </svg>
+         <h3 class="creator-name text-lg sm:text-xl font-semibold tracking-tight mb-1">Vaishnavi Sai</h3>
+         <p class="creator-course text-white/50 font-light text-sm mb-1">BSc IT</p>
+         <p class="creator-course text-white/50 font-light text-sm mb-1">22BS62100412</p>
+         <p class="creator-session text-white/40 text-xs font-light">2022 – 2025</p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section><!-- Footer -->
+   <footer class="border-t border-white/10 py-8 sm:py-12 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto">
+     <div class="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
+      <div class="flex items-center gap-2 sm:gap-3">
+       <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white/40" viewbox="0 0 32 32" fill="none"><rect x="2" y="6" width="28" height="20" rx="3" stroke="currentColor" stroke-width="1.5" fill="none" /> <polygon points="13,11 13,21 22,16" fill="currentColor" opacity="0.9" />
+       </svg><span class="text-white/40 text-xs sm:text-sm">CineStream</span>
+      </div>
+      <div class="flex items-center gap-4 sm:gap-8"><a href="#" class="text-white/40 text-xs sm:text-sm hover:text-white/60 transition-colors">Browse</a> <a href="#" class="text-white/40 text-xs sm:text-sm hover:text-white/60 transition-colors">Genres</a> <a href="#" class="text-white/40 text-xs sm:text-sm hover:text-white/60 transition-colors">Help</a> <a href="#" class="text-white/40 text-xs sm:text-sm hover:text-white/60 transition-colors">Legal</a>
+      </div>
+      <p class="text-white/30 text-xs">© 2024 CineStream. All rights reserved.</p>
+     </div>
+    </div>
+   </footer><!-- Video Modal -->
+   <div id="video-modal" class="fixed inset-0 z-[100] modal-backdrop opacity-0 invisible transition-all duration-500 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="relative w-full max-w-6xl my-auto"><button id="modal-close" class="absolute -top-10 sm:-top-12 right-0 p-2 rounded-full hover:bg-white/10 transition-colors z-10">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+      </svg></button>
+     <div class="glass rounded-xl sm:rounded-2xl overflow-hidden">
+      <div class="w-full bg-black" style="aspect-ratio: 16/9;"><iframe id="video-player" class="w-full h-full" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      </div>
+      <div class="p-4 sm:p-6 max-h-96 sm:max-h-80 overflow-y-auto">
+       <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+        <div class="flex-1 min-w-0">
+         <h3 id="modal-title" class="text-lg sm:text-2xl font-semibold tracking-tight mb-2 break-words"></h3>
+         <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-white/50 text-xs sm:text-sm mb-3 sm:mb-4"><span id="modal-channel" class="truncate"></span> <span class="hidden sm:inline">•</span> <span id="modal-views"></span> <span class="hidden sm:inline">•</span> <span id="modal-duration"></span>
+         </div>
+        </div><button id="modal-watchlater-btn" class="flex-shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-400 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"> Add to Watch Later </button>
+       </div>
+       <p id="modal-description" class="text-white/60 text-xs sm:text-sm leading-relaxed line-clamp-3"></p><!-- Recommended Section -->
+       <div id="recommended-section" class="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10">
+        <h4 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Recommended for You</h4>
+        <div class="flex gap-2 sm:gap-3 overflow-x-auto pb-2" id="recommended-carousel">
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Watch Later Panel -->
+   <div id="watchlater-panel" class="fixed top-0 right-0 h-full w-full sm:w-96 max-w-full glass z-[90] transform translate-x-full transition-transform duration-500 overflow-hidden flex flex-col">
+    <div class="p-4 sm:p-6 flex items-center justify-between border-b border-white/10">
+     <h3 class="text-lg sm:text-xl font-semibold">Watch Later</h3><button id="close-watchlater" class="p-2 rounded-full hover:bg-white/10 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+      </svg></button>
+    </div>
+    <div id="watchlater-list" class="flex-1 overflow-y-auto space-y-2 p-4 sm:p-6">
+     <p class="text-white/40 text-sm text-center py-8">No items saved yet</p>
+    </div>
+   </div>
+  </div>
+  <script>
+    const API_KEY = 'AIzaSyBUdnPN4Vp6mtNU73kwHYosoDl8QMf6bXk';
+    const BASE_URL = 'https://www.googleapis.com/youtube/v3';
+    const TMKOC_PLAYLIST_ID = 'PLyBAqOWU1mfUGnBl8IMAcutxMeeHw1--p';
+    const SOUTH_INDIAN_PLAYLIST_ID = 'PLk1-j3jbilKiFQ6InDjcq-Vcm1_H1Lumv';
+    
+    let allVideos = [];
+    let currentGenre = 'all';
+    let searchQuery = '';
+    let watchLater = JSON.parse(localStorage.getItem('watchLater') || '[]');
+    let currentVideo = null;
+    let videoCache = new Map();
+    let searchOpen = false;
+    let tmkocNextPageToken = null;
+    let tmkocAllVideos = [];
+    let southIndianNextPageToken = null;
+    let southIndianAllVideos = [];
+
+    const genreQueries = {
+      action: 'south indian action movies hindi dubbed full movie',
+      comedy: 'south indian comedy movies hindi dubbed full movie',
+      drama: 'indian drama movies full movie',
+      documentary: 'indian documentary films full',
+      thriller: 'south indian thriller movies hindi dubbed full movie',
+      romance: 'south indian romance movies hindi dubbed full movie',
+      trailers: 'movie trailers 2024 latest hindi bollywood hollywood',
+      trending: 'bollywood movies full movie hindi OR hollywood movies full movie hindi dubbed OR telugu tamil kannada movies hindi dubbed',
+      bollywood: 'bollywood movies full movie hindi',
+      hollywood: 'hollywood movies full movie hindi dubbed',
+      southindian: 'playlist',
+      tmkoc: 'playlist'
+    };
+
+    function extractEpisodeNumber(title) {
+      const match = title.match(/episode\s*(\d+)/i) || 
+                    title.match(/ep\.?\s*(\d+)/i) ||
+                    title.match(/#(\d+)/i) ||
+                    title.match(/(\d+)\s*\|/i);
+      return match ? parseInt(match[1]) : 0;
+    }
+
+    function sortTMKOCEpisodes(videos) {
+      return videos.sort((a, b) => {
+        const epA = extractEpisodeNumber(a.title);
+        const epB = extractEpisodeNumber(b.title);
+        return epA - epB;
+      });
+    }
+
+    async function fetchPlaylistVideos(playlistId, maxResults = 50, pageToken = null) {
+      try {
+        const cacheKey = `playlist_${playlistId}_${pageToken || 'first'}`;
+        if (videoCache.has(cacheKey)) {
+          return videoCache.get(cacheKey);
+        }
+
+        const url = `${BASE_URL}/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=${maxResults}&pageToken=${pageToken || ''}&key=${API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!data.items || data.items.length === 0) {
+          return { videos: [], nextPageToken: null };
+        }
+
+        const videoIds = data.items.map(item => item.snippet.resourceId.videoId).join(',');
+        const detailsUrl = `${BASE_URL}/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${API_KEY}`;
+        const detailsResponse = await fetch(detailsUrl);
+        const detailsData = await detailsResponse.json();
+
+        const videos = detailsData.items.map(item => {
+          const duration = parseDuration(item.contentDetails.duration);
+          const views = formatViews(item.statistics.viewCount);
+          
+          return {
+            id: item.id,
+            title: item.snippet.title,
+            channel: item.snippet.channelTitle,
+            views: views,
+            duration: duration,
+            thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+            description: item.snippet.description,
+            videoId: item.id
+          };
+        });
+
+        const result = { videos, nextPageToken: data.nextPageToken || null };
+        videoCache.set(cacheKey, result);
+        return result;
+      } catch (error) {
+        console.error('Error fetching playlist videos:', error);
+        return { videos: [], nextPageToken: null };
+      }
+    }
+
+    async function fetchYouTubeVideos(query, maxResults = 12) {
+      try {
+        const cacheKey = `${query}_${maxResults}`;
+        if (videoCache.has(cacheKey)) {
+          return videoCache.get(cacheKey);
+        }
+
+        const searchUrl = `${BASE_URL}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&key=${API_KEY}&videoCategoryId=1`;
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
+
+        if (!searchData.items || searchData.items.length === 0) {
+          return [];
+        }
+
+        const videoIds = searchData.items.map(item => item.id.videoId).join(',');
+        const detailsUrl = `${BASE_URL}/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${API_KEY}`;
+        const detailsResponse = await fetch(detailsUrl);
+        const detailsData = await detailsResponse.json();
+
+        const videos = detailsData.items.map(item => {
+          const duration = parseDuration(item.contentDetails.duration);
+          const views = formatViews(item.statistics.viewCount);
+          
+          return {
+            id: item.id,
+            title: item.snippet.title,
+            channel: item.snippet.channelTitle,
+            views: views,
+            duration: duration,
+            thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+            description: item.snippet.description,
+            videoId: item.id
+          };
+        });
+
+        videoCache.set(cacheKey, videos);
+        return videos;
+      } catch (error) {
+        console.error('Error fetching YouTube videos:', error);
+        return [];
+      }
+    }
+
+    function parseDuration(duration) {
+      const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+      const hours = (match[1] || '').replace('H', '');
+      const minutes = (match[2] || '').replace('M', '');
+      const seconds = (match[3] || '').replace('S', '');
+      
+      const parts = [];
+      if (hours) parts.push(hours.padStart(2, '0'));
+      parts.push((minutes || '0').padStart(2, '0'));
+      parts.push((seconds || '0').padStart(2, '0'));
+      
+      return parts.join(':');
+    }
+
+    function formatViews(count) {
+      const num = parseInt(count);
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+      } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+      }
+      return num.toString();
+    }
+
+    async function loadAllContent() {
+      const promises = Object.entries(genreQueries).map(async ([genre, query]) => {
+        if (genre === 'tmkoc') {
+          const result = await fetchPlaylistVideos(TMKOC_PLAYLIST_ID, 50);
+          tmkocAllVideos = sortTMKOCEpisodes(result.videos);
+          tmkocNextPageToken = result.nextPageToken;
+          return { genre, videos: result.videos };
+        } else if (genre === 'southindian') {
+          const result = await fetchPlaylistVideos(SOUTH_INDIAN_PLAYLIST_ID, 50);
+          southIndianAllVideos = result.videos;
+          southIndianNextPageToken = result.nextPageToken;
+          return { genre, videos: result.videos };
+        }
+        
+        const maxResults = 12;
+        let videos = await fetchYouTubeVideos(query, maxResults);
+        return { genre, videos };
+      });
+
+      const results = await Promise.all(promises);
+      
+      allVideos = [];
+      results.forEach(({ genre, videos }) => {
+        videos.forEach(video => {
+          allVideos.push({ ...video, genre });
+        });
+      });
+
+      return allVideos;
+    }
+
+    function createVideoCard(video, isSmall = false) {
+      const isInWatchLater = watchLater.some(v => v.id === video.id);
+      const cardWidth = isSmall ? 'w-28 sm:w-32 md:w-40' : 'w-40 sm:w-48 md:w-56 lg:w-64';
+      
+      return `
+        <div class="flex-shrink-0 ${cardWidth} card-hover cursor-pointer group" data-video-id="${video.id}">
+          <div class="relative aspect-video rounded-lg sm:rounded-xl overflow-hidden bg-white/5">
+            <img src="${video.thumbnail}" alt="${video.title}" loading="lazy" class="w-full h-full object-cover" onerror="this.style.background='linear-gradient(135deg, #1e1e23 0%, #2d2d35 100%)'; this.alt='Image unavailable';">
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                  <svg class="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <polygon points="5,3 19,12 5,21"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="absolute bottom-1.5 sm:bottom-2 right-1.5 sm:right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-black/70 text-[10px] sm:text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+              ${video.duration}
+            </div>
+            <button class="watchlater-toggle absolute top-1.5 sm:top-2 right-1.5 sm:right-2 p-1 sm:p-1.5 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70" data-video-id="${video.id}" onclick="event.stopPropagation(); toggleWatchLater('${video.id}')">
+              <svg class="w-3 h-3 sm:w-4 sm:h-4 ${isInWatchLater ? 'fill-current text-blue-400' : ''}" fill="${isInWatchLater ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="mt-2 sm:mt-3">
+            <h4 class="font-medium text-[11px] sm:text-xs md:text-sm line-clamp-2">${video.title}</h4>
+            <p class="text-white/50 text-[10px] sm:text-xs mt-1 truncate">${video.channel}</p>
+            <p class="text-white/40 text-[10px] sm:text-xs">${video.views} views</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function createSkeletonCard() {
+      return `
+        <div class="flex-shrink-0 w-40 sm:w-48 md:w-56 lg:w-64">
+          <div class="aspect-video rounded-lg sm:rounded-xl skeleton"></div>
+          <div class="mt-2 sm:mt-3 h-3 sm:h-4 w-3/4 rounded skeleton"></div>
+          <div class="mt-1.5 sm:mt-2 h-2 sm:h-3 w-1/2 rounded skeleton"></div>
+        </div>
+      `;
+    }
+
+    function renderCarousel(containerId, videos, isInfinite = false) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      
+      if (videos.length === 0) {
+        container.innerHTML = '<p class="text-white/40 text-sm py-8">No videos found</p>';
+        return;
+      }
+      
+      container.innerHTML = videos.map(v => createVideoCard(v)).join('');
+      
+      container.querySelectorAll('[data-video-id]').forEach(card => {
+        if (!card.classList.contains('watchlater-toggle')) {
+          card.addEventListener('click', (e) => {
+            if (!e.target.closest('.watchlater-toggle')) {
+              const videoId = card.dataset.videoId;
+              openVideoModal(videoId);
+            }
+          });
+        }
+      });
+
+      if (isInfinite && (containerId === 'tmkoc-carousel' || containerId === 'southindian-carousel')) {
+        container.addEventListener('scroll', async () => {
+          if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 100) {
+            const isSouthIndian = containerId === 'southindian-carousel';
+            const nextToken = isSouthIndian ? southIndianNextPageToken : tmkocNextPageToken;
+            const playlistId = isSouthIndian ? SOUTH_INDIAN_PLAYLIST_ID : TMKOC_PLAYLIST_ID;
+            
+            if (nextToken && !container.dataset.loading) {
+              container.dataset.loading = 'true';
+              
+              const skeletons = Array(5).fill(createSkeletonCard()).join('');
+              container.insertAdjacentHTML('beforeend', skeletons);
+              
+              const result = await fetchPlaylistVideos(playlistId, 50, nextToken);
+              
+              if (result.videos && result.videos.length > 0) {
+                if (isSouthIndian) {
+                  southIndianAllVideos = [...southIndianAllVideos, ...result.videos];
+                  southIndianNextPageToken = result.nextPageToken;
+                } else {
+                  tmkocAllVideos = [...tmkocAllVideos, ...sortTMKOCEpisodes(result.videos)];
+                  tmkocNextPageToken = result.nextPageToken;
+                }
+                
+                container.querySelectorAll('.skeleton').forEach(el => el.parentElement.remove());
+                
+                result.videos.forEach(video => {
+                  const card = createVideoCard(video);
+                  container.insertAdjacentHTML('beforeend', card);
+                });
+                
+                container.querySelectorAll('[data-video-id]:not([data-listener])').forEach(card => {
+                  card.dataset.listener = 'true';
+                  if (!card.classList.contains('watchlater-toggle')) {
+                    card.addEventListener('click', (e) => {
+                      if (!e.target.closest('.watchlater-toggle')) {
+                        const videoId = card.dataset.videoId;
+                        openVideoModal(videoId);
+                      }
+                    });
+                  }
+                });
+              }
+              
+              container.dataset.loading = 'false';
+            }
+          }
+        });
+      }
+    }
+
+    function renderAllCarousels() {
+      const categories = {
+        'trailers': allVideos.filter(v => v.genre === 'trailers'),
+        'trending': allVideos.filter(v => ['bollywood', 'hollywood', 'trending'].includes(v.genre)),
+        'action': allVideos.filter(v => v.genre === 'action'),
+        'drama': allVideos.filter(v => v.genre === 'drama'),
+        'comedy': allVideos.filter(v => v.genre === 'comedy'),
+        'documentary': allVideos.filter(v => v.genre === 'documentary'),
+        'thriller': allVideos.filter(v => v.genre === 'thriller'),
+        'romance': allVideos.filter(v => v.genre === 'romance'),
+        'bollywood': allVideos.filter(v => v.genre === 'bollywood'),
+        'hollywood': allVideos.filter(v => v.genre === 'hollywood'),
+        'southindian': southIndianAllVideos,
+        'tmkoc': tmkocAllVideos
+      };
+
+      Object.entries(categories).forEach(([category, videos]) => {
+        let filteredVideos = videos;
+        
+        if (currentGenre !== 'all') {
+          if (category === 'trending') {
+            filteredVideos = videos.filter(v => v.genre === currentGenre);
+          } else if (category !== currentGenre && category !== 'trailers') {
+            filteredVideos = [];
+          }
+        }
+        
+        if (searchQuery) {
+          filteredVideos = filteredVideos.filter(v => 
+            v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            v.channel.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        }
+        
+        const isInfinite = category === 'tmkoc' || category === 'southindian';
+        renderCarousel(`${category}-carousel`, filteredVideos, isInfinite);
+        
+        const section = document.querySelector(`[data-category="${category}"]`);
+        if (section) {
+          if (currentGenre !== 'all' && category !== 'trending' && category !== 'trailers' && category !== currentGenre) {
+            section.style.display = 'none';
+          } else if (filteredVideos.length === 0) {
+            section.style.display = 'none';
+          } else {
+            section.style.display = 'block';
+          }
+        }
+      });
+    }
+
+    function showSkeletons() {
+      const carousels = document.querySelectorAll('.carousel-container');
+      carousels.forEach(c => {
+        c.innerHTML = Array(5).fill(createSkeletonCard()).join('');
+      });
+    }
+
+    function openVideoModal(videoId) {
+      const video = allVideos.find(v => v.id === videoId) || 
+                   tmkocAllVideos.find(v => v.id === videoId) ||
+                   southIndianAllVideos.find(v => v.id === videoId);
+      if (!video) return;
+      
+      currentVideo = video;
+      
+      const modal = document.getElementById('video-modal');
+      const player = document.getElementById('video-player');
+      
+      document.getElementById('modal-title').textContent = video.title;
+      document.getElementById('modal-channel').textContent = video.channel;
+      document.getElementById('modal-views').textContent = video.views + ' views';
+      document.getElementById('modal-duration').textContent = video.duration;
+      document.getElementById('modal-description').textContent = video.description;
+      
+      player.src = `https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`;
+      
+      renderRecommendations(video);
+      updateModalWatchLaterButton(video.id);
+      
+      modal.classList.remove('opacity-0', 'invisible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeVideoModal() {
+      const modal = document.getElementById('video-modal');
+      const player = document.getElementById('video-player');
+      
+      modal.classList.add('opacity-0', 'invisible');
+      player.src = '';
+      document.body.style.overflow = '';
+      currentVideo = null;
+    }
+
+    function renderRecommendations(video) {
+      const container = document.getElementById('recommended-carousel');
+      let recommended = [];
+      
+      if (video.genre === 'tmkoc') {
+        recommended = tmkocAllVideos
+          .filter(v => v.id !== video.id)
+          .slice(0, 8);
+      } else if (video.genre === 'southindian') {
+        recommended = southIndianAllVideos
+          .filter(v => v.id !== video.id)
+          .slice(0, 8);
+      } else {
+        recommended = allVideos
+          .filter(v => v.genre === video.genre && v.id !== video.id)
+          .slice(0, 8);
+      }
+      
+      if (recommended.length === 0) {
+        container.innerHTML = '<p class="text-white/40 text-sm">No recommendations available</p>';
+        return;
+      }
+      
+      container.innerHTML = recommended.map(v => createVideoCard(v, true)).join('');
+      
+      container.querySelectorAll('[data-video-id]').forEach(card => {
+        if (!card.classList.contains('watchlater-toggle')) {
+          card.addEventListener('click', (e) => {
+            if (!e.target.closest('.watchlater-toggle')) {
+              const videoId = card.dataset.videoId;
+              openVideoModal(videoId);
+            }
+          });
+        }
+      });
+    }
+
+    function updateModalWatchLaterButton(videoId) {
+      const btn = document.getElementById('modal-watchlater-btn');
+      const isInWatchLater = watchLater.some(v => v.id === videoId);
+      
+      if (isInWatchLater) {
+        btn.textContent = 'Remove from Watch Later';
+        btn.classList.add('bg-red-500/20', 'border-red-500/40', 'text-red-400', 'hover:bg-red-500/30');
+        btn.classList.remove('bg-blue-500/20', 'border-blue-500/40', 'text-blue-400', 'hover:bg-blue-500/30');
+      } else {
+        btn.textContent = 'Add to Watch Later';
+        btn.classList.remove('bg-red-500/20', 'border-red-500/40', 'text-red-400', 'hover:bg-red-500/30');
+        btn.classList.add('bg-blue-500/20', 'border-blue-500/40', 'text-blue-400', 'hover:bg-blue-500/30');
+      }
+      
+      btn.onclick = () => {
+        if (currentVideo) {
+          toggleWatchLater(currentVideo.id);
+          updateModalWatchLaterButton(currentVideo.id);
+        }
+      };
+    }
+
+    function toggleWatchLater(videoId) {
+      let video = allVideos.find(v => v.id === videoId);
+      if (!video) {
+        video = tmkocAllVideos.find(v => v.id === videoId);
+      }
+      if (!video) {
+        video = southIndianAllVideos.find(v => v.id === videoId);
+      }
+      if (!video) return;
+      
+      const index = watchLater.findIndex(v => v.id === videoId);
+      if (index > -1) {
+        watchLater.splice(index, 1);
+      } else {
+        watchLater.push(video);
+      }
+      
+      localStorage.setItem('watchLater', JSON.stringify(watchLater));
+      updateWatchLaterUI();
+      renderAllCarousels();
+      
+      if (currentVideo) {
+        renderRecommendations(currentVideo);
+        updateModalWatchLaterButton(currentVideo.id);
+      }
+    }
+
+    function updateWatchLaterUI() {
+      const countEl = document.getElementById('watchlater-count');
+      const listEl = document.getElementById('watchlater-list');
+      
+      if (watchLater.length > 0) {
+        countEl.textContent = watchLater.length;
+        countEl.classList.remove('hidden');
+        
+        listEl.innerHTML = watchLater.map(video => `
+          <div class="flex gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group" onclick="openVideoModal('${video.id}'); closeWatchLaterPanel();">
+            <div class="w-20 sm:w-24 aspect-video rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
+              <img src="${video.thumbnail}" alt="${video.title}" loading="lazy" class="w-full h-full object-cover" onerror="this.style.background='#1e1e23';">
+            </div>
+            <div class="flex-1 min-w-0">
+              <h4 class="font-medium text-xs sm:text-sm line-clamp-2">${video.title}</h4>
+              <p class="text-white/50 text-[10px] sm:text-xs mt-1 truncate">${video.channel}</p>
+              <p class="text-white/40 text-[10px] sm:text-xs">${video.duration}</p>
+            </div>
+            <button class="p-1.5 rounded-full hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity self-center flex-shrink-0" onclick="event.stopPropagation(); toggleWatchLater('${video.id}'); updateWatchLaterUI();">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        `).join('');
+      } else {
+        countEl.classList.add('hidden');
+        listEl.innerHTML = '<p class="text-white/40 text-sm text-center py-8">No items saved yet</p>';
+      }
+    }
+
+    function closeWatchLaterPanel() {
+      document.getElementById('watchlater-panel').classList.add('translate-x-full');
+    }
+
+    function handleSearch(query) {
+      searchQuery = query.toLowerCase();
+      renderAllCarousels();
+    }
+
+    function handleGenreChange(genre) {
+      currentGenre = genre;
+      const genreLabels = {
+        'all': 'All Genres',
+        'bollywood': 'Bollywood',
+        'hollywood': 'Hollywood',
+        'southindian': 'South Indian',
+        'action': 'Action',
+        'comedy': 'Comedy',
+        'drama': 'Drama',
+        'documentary': 'Documentary',
+        'thriller': 'Thriller',
+        'romance': 'Romance',
+        'tmkoc': 'TMKOC'
+      };
+      document.getElementById('selected-genre').textContent = genreLabels[genre] || 'All Genres';
+      document.getElementById('genre-dropdown').classList.add('opacity-0', 'invisible', 'translate-y-2');
+      renderAllCarousels();
+    }
+
+    function setupCarouselNavigation() {
+      document.querySelectorAll('.content-row').forEach(section => {
+        const container = section.querySelector('.carousel-container');
+        const prevBtn = section.querySelector('.carousel-prev');
+        const nextBtn = section.querySelector('.carousel-next');
+        
+        if (prevBtn && nextBtn && container) {
+          prevBtn.addEventListener('click', () => {
+            container.scrollBy({ left: -300, behavior: 'smooth' });
+          });
+          
+          nextBtn.addEventListener('click', () => {
+            container.scrollBy({ left: 300, behavior: 'smooth' });
+          });
+        }
+      });
+    }
+
+    function setupEventListeners() {
+      const expandedStates = { 1: false, 2: false, 3: false };
+      
+      document.querySelectorAll('.creator-card-interactive').forEach(card => {
+        card.addEventListener('click', () => {
+          const creatorId = card.dataset.creator;
+          const isExpanded = expandedStates[creatorId];
+          
+          const circle = card.querySelector('.creator-circle');
+          const square = card.querySelector('.creator-square');
+          
+          if (isExpanded) {
+            circle.classList.remove('opacity-0', 'invisible', 'scale-0');
+            square.classList.add('opacity-0', 'invisible', 'scale-75');
+            square.style.zIndex = '-1';
+            card.classList.remove('scale-110');
+            expandedStates[creatorId] = false;
+          } else {
+            circle.classList.add('opacity-0', 'invisible', 'scale-0');
+            square.classList.remove('opacity-0', 'invisible', 'scale-75');
+            square.style.zIndex = '10';
+            card.classList.add('scale-110');
+            expandedStates[creatorId] = true;
+          }
+        });
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.creator-card-interactive')) {
+          document.querySelectorAll('.creator-card-interactive').forEach(card => {
+            if (expandedStates[card.dataset.creator]) {
+              const circle = card.querySelector('.creator-circle');
+              const square = card.querySelector('.creator-square');
+              circle.classList.remove('opacity-0', 'invisible', 'scale-0');
+              square.classList.add('opacity-0', 'invisible', 'scale-75');
+              square.style.zIndex = '-1';
+              card.classList.remove('scale-110');
+              expandedStates[card.dataset.creator] = false;
+            }
+          });
+        }
+      });
+      
+      document.getElementById('genre-btn').addEventListener('click', () => {
+        const dropdown = document.getElementById('genre-dropdown');
+        dropdown.classList.toggle('opacity-0');
+        dropdown.classList.toggle('invisible');
+        dropdown.classList.toggle('translate-y-2');
+      });
+
+      document.querySelectorAll('.genre-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          handleGenreChange(btn.dataset.genre);
+        });
+      });
+
+      const searchToggle = document.getElementById('search-toggle');
+      const searchBar = document.getElementById('search-bar');
+      const searchInput = document.getElementById('search-input');
+      const searchCloseBtn = document.getElementById('search-close-btn');
+
+      searchToggle.addEventListener('click', () => {
+        searchOpen = !searchOpen;
+        if (searchOpen) {
+          searchBar.classList.remove('hidden');
+          searchInput.focus();
+        } else {
+          searchBar.classList.add('hidden');
+          searchInput.value = '';
+          handleSearch('');
+        }
+      });
+
+      searchCloseBtn.addEventListener('click', () => {
+        searchOpen = false;
+        searchBar.classList.add('hidden');
+        searchInput.value = '';
+        handleSearch('');
+      });
+
+      searchInput.addEventListener('input', (e) => {
+        handleSearch(e.target.value);
+      });
+
+      document.getElementById('watchlater-btn').addEventListener('click', () => {
+        document.getElementById('watchlater-panel').classList.toggle('translate-x-full');
+      });
+
+      document.getElementById('close-watchlater').addEventListener('click', closeWatchLaterPanel);
+
+      document.getElementById('modal-close').addEventListener('click', closeVideoModal);
+      document.getElementById('video-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'video-modal') {
+          closeVideoModal();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeVideoModal();
+          closeWatchLaterPanel();
+          if (searchOpen) {
+            searchOpen = false;
+            searchBar.classList.add('hidden');
+            searchInput.value = '';
+            handleSearch('');
+          }
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#genre-btn') && !e.target.closest('#genre-dropdown')) {
+          document.getElementById('genre-dropdown').classList.add('opacity-0', 'invisible', 'translate-y-2');
+        }
+      });
+
+      window.addEventListener('scroll', () => {
+        const nav = document.getElementById('navbar');
+        if (window.scrollY > 50) {
+          nav.style.background = 'rgba(15, 15, 20, 0.95)';
+        } else {
+          nav.style.background = 'rgba(30, 30, 35, 0.75)';
+        }
+      });
+    }
+
+    async function init() {
+      showSkeletons();
+      setupEventListeners();
+      setupCarouselNavigation();
+      
+      try {
+        await loadAllContent();
+        renderAllCarousels();
+        updateWatchLaterUI();
+      } catch (error) {
+        console.error('Failed to load videos:', error);
+        document.getElementById('content').innerHTML = '<div class="text-center py-20 px-6"><p class="text-white/60 text-lg">Unable to load videos. Please try again later.</p></div>';
+      }
+    }
+
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c92eb3813d6a3b1',t:'MTc3MDI5OTg2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
